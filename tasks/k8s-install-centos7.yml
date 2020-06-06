@@ -52,15 +52,15 @@
     - pyyaml
     - requests
 
-  - name: Enable and Start Services
-    service:
-      name: "{{ item }}"
-      enabled: true
-      state: started
-    with_items:
-      - docker
-      - kubelet
-      - haveged
+- name: Enable and Start Services
+  service:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+  with_items:
+    - docker
+    - kubelet
+    - haveged
 
 - name: Ensure br_netfilter Kernel Module is Loaded
   modprobe:
