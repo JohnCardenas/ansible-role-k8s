@@ -2,6 +2,7 @@
 - name: Install kubernetes Repository
   yum_repository:
     name: kubernetes
+    description: Kubernetes
     enabled: true
     baseurl: https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
     gpgcheck: true
