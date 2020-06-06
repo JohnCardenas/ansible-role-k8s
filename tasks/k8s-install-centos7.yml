@@ -40,7 +40,7 @@
     src: ../templates/docker/daemon.json.j2
     dest: /etc/docker/daemon.json
   notify:
-    - restart docker
+    - reboot
 
 - name: Install Python Libraries for k8s Ansible Module
   pip:
@@ -62,6 +62,8 @@
     - docker
     - kubelet
     - haveged
+  notify:
+    - reboot
 
 - name: Ensure br_netfilter Kernel Module is Loaded
   modprobe:
@@ -71,11 +73,13 @@
 - name: Configure NetFilter to Route Across Bridge
   sysctl:
     name: "{{ item }}"
-    value: 1
+    value: "1"
     sysctl_set: true
   loop:
     - net.bridge.bridge-nf-call-iptables
     - net.bridge.bridge-nf-call-ip6tables
+  notify:
+    - reboot
 
 - name: Ensure SELinux is Set to Permissive
   lineinfile:
@@ -83,6 +87,8 @@
     regexp: '^SELINUX='
     line: SELINUX=permissive
   register: set_selinux
+  notify:
+    - reboot
 
 - name: Disable SELinux
   when: set_selinux.changed
@@ -97,11 +103,9 @@
     - swap
     - none
   register: unmount_swap
+  notify:
+    - reboot
 
 - name: Disable Swap
   when: unmount_swap.changed
   shell: swapoff -a
-
-- name: Reboot
-  when: set_selinux.changed or unmount_swap.changed
-  reboot:
