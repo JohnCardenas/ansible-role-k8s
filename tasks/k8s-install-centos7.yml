@@ -46,6 +46,7 @@
   pip:
     name: "{{ item }}"
     extra_args: --upgrade
+    executable: pip3
   loop:
     - openshift
     - kubernetes
