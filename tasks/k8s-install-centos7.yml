@@ -26,7 +26,6 @@
   firewalld:
     port: "{{ item }}"
     permanent: true
-    enabled: true
     state: enabled
   loop:
     - 2379-2380/tcp
