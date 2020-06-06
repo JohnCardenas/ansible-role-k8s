@@ -1,2 +1,7 @@
 ---
 # tasks file for k8s
+- import_tasks: k8s-install-centos7.yml
+  when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"
+  tags:
+    - k8s
+    - k8s:install

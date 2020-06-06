@@ -1,0 +1,106 @@
+---
+- name: Install kubernetes Repository
+  yum_repository:
+    name: kubernetes
+    enabled: true
+    baseurl: https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+    gpgcheck: true
+    repo_gpgcheck: true
+    gpgkey: https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+
+- name: Install Required Packages
+  yum:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - epel-release
+    - haveged
+    - arptables
+    - ebtables
+    - kubelet
+    - kubeadm
+    - kubectl
+
+- name: Configure Firewall
+  firewalld:
+    port: "{{ item }}"
+    permanent: true
+    enabled: true
+    state: enabled
+  loop:
+    - 2379-2380/tcp
+    - 6443/tcp
+    - 10250/tcp
+    - 10251/tcp
+    - 10252/tcp
+    - 10255/tcp
+
+- name: Deploy Docker Daemon Config
+  template:
+    src: ../templates/docker/daemon.json.j2
+    dest: /etc/docker/daemon.json
+  notify:
+    - restart docker
+
+- name: Install Python Libraries for k8s Ansible Module
+  pip:
+    name: "{{ item }}"
+    extra_args: --upgrade
+  loop:
+    - openshift
+    - kubernetes
+    - pyyaml
+    - requests
+
+  - name: Enable and Start Services
+    service:
+      name: "{{ item }}"
+      enabled: true
+      state: started
+    with_items:
+      - docker
+      - kubelet
+      - haveged
+
+- name: Ensure br_netfilter Kernel Module is Loaded
+  modprobe:
+    name: br_netfilter
+    state: present
+
+- name: Configure NetFilter to Route Across Bridge
+  sysctl:
+    name: "{{ item }}"
+    value: 1
+    sysctl_set: true
+  loop:
+    - net.bridge.bridge-nf-call-iptables
+    - net.bridge.bridge-nf-call-ip6tables
+
+- name: Ensure SELinux is Set to Permissive
+  lineinfile:
+    path: /etc/selinux/config
+    regexp: '^SELINUX='
+    line: SELINUX=permissive
+  register: set_selinux
+
+- name: Disable SELinux
+  when: set_selinux.changed
+  shell: setenforce 0
+
+- name: Unmount Swap Volumes
+  mount:
+    name: "{{ item }}"
+    fstype: swap
+    state: absent
+  loop:
+    - swap
+    - none
+  register: unmount_swap
+
+- name: Disable Swap
+  when: unmount_swap.changed
+  shell: swapoff -a
+
+- name: Reboot
+  when: set_selinux.changed or unmount_swap.changed
+  reboot:
