@@ -52,7 +52,6 @@
 - name: Install Python Libraries for k8s Ansible Module
   pip:
     name: "{{ item }}"
-    extra_args: --upgrade
   loop:
     - kubernetes
     - pyyaml
