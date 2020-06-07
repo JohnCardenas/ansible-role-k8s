@@ -44,6 +44,11 @@
   notify:
     - reboot
 
+- name: Update ipaddress Python Module
+  pip:
+    name: ipaddress
+    extra_args: --ignore-installed
+
 - name: Install Python Libraries for k8s Ansible Module
   pip:
     name: "{{ item }}"
