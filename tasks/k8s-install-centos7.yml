@@ -15,6 +15,8 @@
     state: present
   loop:
     - epel-release
+    - libselinux-python
+    - python-openshift
     - haveged
     - arptables
     - ebtables
@@ -46,9 +48,7 @@
   pip:
     name: "{{ item }}"
     extra_args: --upgrade
-    executable: pip3
   loop:
-    - openshift
     - kubernetes
     - pyyaml
     - requests
